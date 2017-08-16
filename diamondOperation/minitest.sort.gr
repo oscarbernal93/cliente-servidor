@@ -1,0 +1,21 @@
+c
+c esto es un comentario
+c esto es un set de prueba
+c viene primero la fila
+c luego la columna
+c luego el valor
+c se asume que el primer indice 
+c es 1... mucha atencion a eso
+a 1 2 7
+a 1 4 3
+a 1 5 2
+a 2 1 7
+a 2 2 1
+a 2 3 4
+a 2 5 1
+a 3 2 4
+a 4 1 3
+a 4 4 4
+a 5 1 2
+a 5 2 1
+a 5 5 5
