@@ -5,13 +5,13 @@ LIBS=-lzmq -lzmqpp -lsfml-audio
 
 all: hermes apolo player
 
-player:
+player: player.cc
 	$(CC) player.cc -o player $(LIBS) hermes.o apolo.o
 
-hermes:
+hermes: hermes.cc
 	$(CC) -c hermes.cc -o hermes.o
 	
-apolo:
+apolo: apolo.cc
 	$(CC) -c apolo.cc -o apolo.o
 	
 clean:
