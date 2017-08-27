@@ -9,10 +9,10 @@ void print_playlist(list<string> &playlist);
 
 int main(int argc, char *argv[])
 {
-	/*read the args
+	//read the args
 	if ( not ( 3 == argc ) )
 	{
-    cerr << "Wrong number of arguments, remember to provide the server's ip and your username" << endl;
+    cerr << "Wrong number of arguments, remember to provide the server's ip with port and your username" << endl;
     return 1;
 	}
 	string connection_address(argv[1]);
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     //handshake
     message greetings("HS");
     greetings << user_name;
-    canopus_socket.send(greetings);*/
+    canopus_socket.send(greetings);
 	//get the file list
 	vector<string> mlist = files_in("music");
 	//vars
@@ -44,16 +44,16 @@ int main(int argc, char *argv[])
     poller deadpool;
     int console = fileno(stdin);
     //add to the poll te socket and the console input
-    //deadpool.add(canopus_socket, poller::poll_in);
+    deadpool.add(canopus_socket, poller::poll_in);
     deadpool.add(console, poller::poll_in);
     while (true){
         if(deadpool.poll()){
-            /*call a function when the secket has messages to read
+            //call a function when the secket has messages to read
             if(deadpool.has_input(canopus_socket)){
-                if(1 == cmmanager.sockin()){
+                if(1 == socket_message_manager()){
                     return 0;
                 }
-            }*/
+            }
             //call a function when the console has messages to read
             if(deadpool.has_input(console)){
                 if(1 == console_message_manager(mlist,playlist)){
