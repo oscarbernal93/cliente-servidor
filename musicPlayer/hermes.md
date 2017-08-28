@@ -20,7 +20,7 @@ Take a string that represents a number and return that number as integer or long
 Receives a number and return it in a string
 
 **Function:** create_message  
-Initialize a message with a specific format, first come a comand and next a filename
+Initialize a message with a specific format, first come a comand and next a username
 
 **Function:** clean_message  
 Take a message and destroy all the content

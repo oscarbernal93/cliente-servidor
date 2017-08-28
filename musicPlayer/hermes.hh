@@ -39,7 +39,7 @@ vector<char> readFileToBytes(const string& fileName) ;
 void fileToMessage(const string& fileName, message& msg);
 void messageToFile(const message& msg, const string& fileName);
 void messageToPartialFile(const message& msg, const string& fileName);
-void create_message(const string& cmd, const string& filename, message& msg);
+void create_message(const string& cmd, const string& username, message& msg);
 void seek_n_destroy(string& victim, string& part);
 vector<string> explode(string &big_string,string token);
 

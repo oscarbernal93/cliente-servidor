@@ -89,9 +89,9 @@ void messageToPartialFile(const message& msg, const string& fileName)
   ofs.write((char*)data, size);
 }
 
-void create_message(const string& cmd, const string& filename, message& msg)
+void create_message(const string& cmd, const string& user_name, message& msg)
 {
-  msg << cmd << filename;
+  msg << cmd << user_name;
 }
 
 
