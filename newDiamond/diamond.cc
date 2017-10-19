@@ -2,7 +2,7 @@
 
 //Sparce Matrix
 class SparseMatrix {
-private:
+public:
   vector<int> val;
   vector<int> colInd;
   vector<int> rowPtr;
@@ -73,7 +73,7 @@ public:
     }
     return result;
   }
-  void mult_row(int a,Vector& rv,Vector& rc)
+  void mult_row(SparseMatrix& m,int a,Vector& rv,Vector& rc)
   {
     int x1 = rowPtr[a];
     int y1 = rowPtr[a+1];
@@ -83,19 +83,19 @@ public:
     for (int b = 0; b < rows; ++b)
     {
       //para cada columna
-      int x2 = rowPtr[b];
-      int y2 = rowPtr[b+1];
-      int r=0; //valor
+      int x2 = m.rowPtr[b];
+      int y2 = m.rowPtr[b+1];
+      int r=INF; //valor
       for (int i = x1; i < y1; ++i)
       {
         //se recorre cada elemento de la columna
-        for (int j = x2; colInd[i] >= colInd[j] and j < y2; ++j)
+        for (int j = x2; colInd[i] >= m.colInd[j] and j < y2; ++j)
         {
           //busca si existe un valor en la fila correspondiente
-          if (colInd[i] == colInd[j])
+          if (colInd[i] == m.colInd[j])
           {
             //aqui se efectua la multiplicacion
-	    r = min(r,val[i] + val[j]);
+	    r = min(r,val[i] + m.val[j]);
             //r += val[i]*val[j];
           }
         }
@@ -266,21 +266,21 @@ class thread_pool
     }
 
     template<typename FunctionType>
-    void submit(FunctionType f, int a, SparseMatrix &m)
+    void submit(FunctionType f, int i,SparseMatrix &a, SparseMatrix &m)
     {
-      std::function<void()> my_f = std::bind(f, a, ref(m));
+      std::function<void()> my_f = std::bind(f, i, ref(a), ref(m));
       work_queue.push(my_f);
     }
 };
 
-void action(int a,SparseMatrix &m)
+void action(int i,SparseMatrix &a,SparseMatrix &m)
 {
   Vector rv;
   Vector rc;
-  m.mult_row(a,rv,rc);
+  m.mult_row(a,i,rv,rc);
 }
 
-void load(SparseMatrix &m, string source)
+void load(SparseMatrix &a,SparseMatrix &m, string source)
 {
 
   ifstream fin;
@@ -297,6 +297,7 @@ void load(SparseMatrix &m, string source)
       size_t r, c, v;
       stream >> r >> c >> v;
       m.set( v , r-1 , c-1 );
+      a.set( v , r-1 , c-1 );
     }
   }
 }
@@ -306,8 +307,9 @@ int main(int argc, char const *argv[])
   high_resolution_clock::time_point t1;
   high_resolution_clock::time_point t2;
   t1= high_resolution_clock::now();
+  SparseMatrix a(NODES,NODES);
   SparseMatrix m(NODES,NODES);
-  load(m, FILE);
+  load(a, m, FILE);
   t2 = high_resolution_clock::now();
   cout << "matrix reading: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
   //se comienza el ciclo
@@ -317,7 +319,7 @@ int main(int argc, char const *argv[])
     thread_pool p;
     for (int i = 0; i < NODES; ++i)
     {
-      p.submit(action,i,ref(m));
+      p.submit(action,i,ref(a),ref(m));
     }
   }
   t1 = high_resolution_clock::now();
