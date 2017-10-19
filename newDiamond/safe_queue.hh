@@ -1,5 +1,5 @@
-#ifndef _MYLIB_HH_
-  #define _MYLIB_HH_
+#ifndef _SAFEQUEUE_HH_
+  #define _SAFEQUEUE_HH_
 
 #include <atomic>
 #include <mutex>

@@ -1,8 +1,8 @@
 #ifndef _THREAD_POOL_HH_
   #define _THREAD_POOL_HH_
 
-#include "sparse_matrix.hh"
 #include "safe_queue.hh"
+#include "sparse_matrix.hh"
 #include <atomic>
 #include <mutex>
 #include <thread>

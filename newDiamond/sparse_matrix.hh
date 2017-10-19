@@ -29,10 +29,6 @@ public:
   SparseMatrix mult(const SparseMatrix& b);
   void mult_row(int a,Vector& rv,Vector& rc);
   void print();
+};
 
 #endif
-
-
-
-
-};
