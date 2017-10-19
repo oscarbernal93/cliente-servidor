@@ -1,11 +1,21 @@
 #ifndef _DIAMOND_HH_
   #define _DIAMOND_HH_
 
-#include "sparse_matrix.hh"
-#include "safe_queue.hh"
-#include "thread_pool.hh"
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <memory>
+#include <queue>
+#include <thread>
 #include <iostream>
-#include <string>
+#include <vector>
+#include <chrono>
+#include <utility>
+#include <unistd.h>
+#include <math.h>
+#include <fstream>
+#include <sstream>
+#define INF numeric_limits<int>::max()
 
 #define FILE "USA-road-d.NY.sort.gr"
 #define NODES 264346
@@ -14,8 +24,5 @@
 using namespace std;
 using namespace std::chrono;
 using Vector = vector<int>;
-
-void action(int a,SparseMatrix &m);
-void load(SparseMatrix &m, string source);
 
 #endif
