@@ -12,8 +12,11 @@
 #include <math.h>
 #include <fstream>
 #include <sstream>
+#define INF numeric_limits<int>::max()
 
-#define NUM_SIZE 5
+#define FILE "USA-road-d.NY.sort.gr"
+#define NODES 264346
+#define LIMIT 19
 
 using namespace std;
 using namespace std::chrono;
@@ -38,7 +41,7 @@ public:
     //busca donde empieza y donde termina la fila
     int opening = rowPtr[r];
     int ending = rowPtr[r+1];
-    int result = 0;
+    int result = INF;
     //recorre las columnas de la fila buscando la solicitada
     for (int i = opening; i < ending; i++) {
       if (colInd[i] == c) {
@@ -114,7 +117,8 @@ public:
           if (colInd[i] == colInd[j])
           {
             //aqui se efectua la multiplicacion
-            r += val[i]*val[j];
+	    r = min(r,val[i] + val[j]);
+            //r += val[i]*val[j];
           }
         }
       }
@@ -245,7 +249,7 @@ class thread_pool
 
   void worker_thread()
   {
-    while(!work_queue.empty())
+    while(!done)
     {
       std::function<void()> task;
       if (work_queue.try_pop(task))
@@ -324,33 +328,21 @@ int main(int argc, char const *argv[])
   high_resolution_clock::time_point t1;
   high_resolution_clock::time_point t2;
   t1= high_resolution_clock::now();
-  //valor, fila, columna
-  //SparseMatrix m(5,5);
-  //load(m, "minitest.sort.gr");
-  SparseMatrix m(264346,264346);
-  load(m, "USA-road-d.NY.sort.gr");
-  //SparseMatrix m(9,9);
-  //load(m, "minitest2.sort.gr");
+  SparseMatrix m(NODES,NODES);
+  load(m, FILE);
   t2 = high_resolution_clock::now();
-  cout << "matrix definition: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
-  //se comienza el pooling
-/*
-  for (int i = 0; i < 264346; ++i)
-    {
-      action(i,m);
-    }
-  t1 = high_resolution_clock::now();
-  cout << "matrix multiplication: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
-  return 0;
-*/
+  cout << "matrix reading: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
+  //se comienza el ciclo
+ 
+  for (int k=1; k <= LIMIT; k++)
   {
     thread_pool p;
-    for (int i = 0; i < 264346; ++i)
+    for (int i = 0; i < NODES; ++i)
     {
       p.submit(action,i,ref(m));
     }
   }
   t1 = high_resolution_clock::now();
-  cout << "matrix multiplication: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
+  cout << "Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
   return 0;
 }

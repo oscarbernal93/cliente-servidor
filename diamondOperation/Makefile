@@ -13,7 +13,7 @@ async:
 tpool:
 	$(CC) tpool.cc -o tpool $(LIBS)
 
-tpoolsm:
+tpoolsm:  tpoolsm.cc
 	$(CC) tpoolsm.cc -o tpoolsm $(LIBS)
 
 clean:
