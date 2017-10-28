@@ -15,6 +15,9 @@ public:
   //ya que la referencia a la matriz b se recibe como const
   int get(int r, int c) const
   {
+    if (c == r){
+      return 0;
+    }
     // Retorna el elemento que hay en la posicion (r,c)
     //busca donde empieza y donde termina la fila
     int opening = rowPtr[r];
@@ -28,7 +31,8 @@ public:
         break;
       }
     }
-    // si recorrio toda la fila y no encontro la columna, result es 0
+
+    // si recorrio toda la fila y no encontro la columna, result es INF
     // si se escribio algun valor en result, lo retorna
     return result;
   }
@@ -42,20 +46,19 @@ public:
     counter++;
     return;
   }
-  SparseMatrix mult(const SparseMatrix& b)
+  void mult(const SparseMatrix& b)
   {
     // Multiplica esta matriz con la matriz b
     // se crea la matriz resultado, de filas como la propia matriz t de columnas como la segunda
     int r = rows;
     int c = b.cols;
-    SparseMatrix result(r,c);
     for (int i = 0; i < r; i++) {
       for (int j = 0; j < c; j++) {
         // aca se comienza, para cada posicion i,j de la matriz resultado
         // el calculo de la multiplicacion de matrices.
         int opening = rowPtr[i];
         int ending = rowPtr[i+1];
-        int value = 0;
+        int value = INF;
         for (int k = opening; k < ending; k++) {
           //se recorren las columnas con valores
           int tc = colInd[k];
@@ -63,15 +66,15 @@ public:
           // aca me estaba equivocando en el orden fila/columna
           // que para b se debe tomar columna/fila, ya que se recorre al contrario :P
           int v2 = b.get(tc,j);
-          value += v1*v2;
+          value = min( value, v1+v2);
         }
-        if (value != 0) {
-          result.set(value,i,j);
+        if (value != INF) {
+          this->set(value,i,j);
         }
         //fin del proceso de multiplicacion
       }
     }
-    return result;
+    return;
   }
   void mult_row(SparseMatrix& m,int a,Vector& rv,Vector& rc)
   {
@@ -112,9 +115,9 @@ public:
   void print()
   {
     // imprime la matriz dispersa como los 3 vectores
-    //se imprimen los valores
-    cout << "Values = ";
-    for (const auto i: val)
+    //se imprimen las filas
+    cout << "RowPtr = ";
+    for (const auto i: rowPtr)
       cout << i << '\t';
     cout << endl;
     //se imprimen las columnas
@@ -122,9 +125,9 @@ public:
     for (const auto i: colInd)
       cout << i << '\t';
     cout << endl;
-    //se imprimen las filas
-    cout << "RowPtr = ";
-    for (const auto i: rowPtr)
+    //se imprimen los valores
+    cout << "Values = ";
+    for (const auto i: val)
       cout << i << '\t';
     cout << endl;
   }
@@ -223,7 +226,7 @@ class thread_pool
   std::atomic_bool done;
   threadsafe_queue<std::function<void()> > work_queue;
   std::vector<std::thread> threads;
-  join_threads joiner;
+  join_threads *joiner;
 
   void worker_thread()
   {
@@ -242,7 +245,7 @@ class thread_pool
   }
   public:
     thread_pool():
-    done(false),joiner(threads)
+    done(false),joiner(new join_threads(threads))
     {
       unsigned const thread_count=std::thread::hardware_concurrency();
       try
@@ -263,6 +266,7 @@ class thread_pool
     ~thread_pool()
     {
       done=true;
+      joiner->~join_threads();
     }
 
     template<typename FunctionType>
@@ -310,6 +314,7 @@ int main(int argc, char const *argv[])
   SparseMatrix a(NODES,NODES);
   SparseMatrix m(NODES,NODES);
   load(a, m, FILE);
+  a.print();
   t2 = high_resolution_clock::now();
   cout << "matrix reading: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
   //se comienza el ciclo
@@ -323,6 +328,17 @@ int main(int argc, char const *argv[])
     }
   }
   t1 = high_resolution_clock::now();
-  cout << "Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
+  cout << "Con. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
+  m.print();
+
+  load(a, m, FILE);
+  t2 = high_resolution_clock::now();
+  for (int k=1; k <= 1; k++)
+  {
+    m.mult(a);
+  }
+  t1 = high_resolution_clock::now();
+  cout << "Seq. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
+  m.print();
   return 0;
 }
