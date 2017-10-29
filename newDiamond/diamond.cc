@@ -16,7 +16,7 @@ public:
   int counter;
   int rows;
   int cols;
-  SparseMatrix(int r, int c) : rows(r), cols(c), rowPtr(r + 1, 0),data(NULL), pointers (r,NULL) counter(0){}
+  SparseMatrix(int r, int c) : rows(r), cols(c), rowPtr(r + 1, 0), pointers (r,NULL), counter(0){}
   //se tuvo que volver const a get para poder llamarlo desde la multiplicacion
   //ya que la referencia a la matriz b se recibe como const
   int get(int r, int c) const
@@ -54,7 +54,7 @@ public:
     //redefinicion del set
     //se asume que la fuente esta ordenada
     node *nuevo = (node *) malloc(sizeof(node));
-    nuevo->val = val;
+    nuevo->val = v;
     nuevo->colInd = c;
     rowPtr[r+1]=counter+1;
     pointers[r]= nuevo; 
@@ -64,7 +64,7 @@ public:
   //put crea e inserta un nuevo elemento
   void put (int v, int r, int c)
   {
-  //intenta encontrar el elemento
+    //intenta encontrar el elemento
     int opening = rowPtr[r];
     int ending = rowPtr[r+1];
     //recorre las columnas de la fila buscando la solicitada
@@ -80,7 +80,7 @@ public:
         //si lo columna en la que esta es mayor a la que quiere escribir
         //es porque se paso  y es necesario insertar un nodo antes
  	node *nuevo = (node *) malloc(sizeof(node));
-        ans = current->prev;
+        node *ans = current->prev;
         ans->next = nuevo;
         nuevo->next = current;
         nuevo->prev = ans;
@@ -91,6 +91,7 @@ public:
 	  pointers[r] = nuevo;
 	}
         // ahora actualiza todas los demas rowPtr
+	int j;
 	for(j = r+1;j<= rows;j++)
 	{
 	  rowPtr[j] += 1; 
@@ -105,15 +106,17 @@ public:
   }
   void mult(SparseMatrix &result)
   {
+    int x;
     // Multiplica esta matriz con si misma escribiendo el resultado en result
     //cicla sobre el numero de filas llamando a la multiplicacion pequenna
     for(x = 0; x < rows; x++)
     {
-      this.row_mult(x,result);
+      this->row_mult(x,result);
     }
   }
   void row_mult (int row_n, SparseMatrix &result)
   {
+    int x,y,cur_col,val_origen,val_destino;
     //para la fila x de result
     x = row_n;
     //y cada columna y de result
@@ -135,7 +138,7 @@ public:
         {
           cur_col = current->colInd;
           val_origen = current->val;
-          val_destino = this.get(cur_col,y);
+          val_destino = this->get(cur_col,y);
           //se calcula el nuevo value
           value = min( value, val_origen + val_destino );
           //incremento y paso al siguiente
@@ -150,21 +153,15 @@ public:
 
   void print()
   {
-    // imprime la matriz dispersa como los 3 vectores
-    //se imprimen las filas
-    cout << "RowPtr = ";
-    for (const auto i: rowPtr)
-      cout << i << '\t';
-    cout << endl;
-    //se imprimen las columnas
-    cout << "ColInd = ";
-    for (const auto i: colInd)
-      cout << i << '\t';
-    cout << endl;
-    //se imprimen los valores
-    cout << "Values = ";
-    for (const auto i: val)
-      cout << i << '\t';
+    int x,y;
+    for(x = 0; x < rows; x++)
+    {
+      for(y = 0; y < cols; y++)
+      {
+        cout << "\t" << this->get(x,y);
+      }
+      cout << endl;
+    }
     cout << endl;
   }
 };
@@ -315,7 +312,7 @@ class thread_pool
 
 void action(int i,SparseMatrix &origen,SparseMatrix &result)
 {
-  origen.mult_row(i,result);
+  origen.row_mult(i,result);
 }
 
 void load(SparseMatrix &a,SparseMatrix &m, string source)
@@ -349,6 +346,7 @@ int main(int argc, char const *argv[])
   SparseMatrix m(NODES,NODES);
   load(a, m, FILE);
   a.print();
+  
   t2 = high_resolution_clock::now();
   cout << "matrix reading: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
   //se comienza el ciclo

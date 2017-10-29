@@ -16,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #define INF (numeric_limits<int>::max()/2)-1
+#define NUM_SIZE 5
 
 //define FILE "USA-road-d.NY.sort.gr"
 #define FILE "mintest.sort.gr"
