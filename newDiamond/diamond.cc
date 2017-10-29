@@ -1,16 +1,22 @@
 #include "diamond.hh"
 
+//Linked List
+typedef struct node {
+  int colInd;
+  int val;
+  struct node * prev;
+  struct node * next;
+} node;
+
 //Sparce Matrix
 class SparseMatrix {
 public:
-  vector<int> val;
-  vector<int> colInd;
   vector<int> rowPtr;
+  vector<node *> pointers;
   int counter;
-public:
   int rows;
   int cols;
-  SparseMatrix(int r, int c) : rows(r), cols(c), rowPtr(r + 1, 0), counter(0) {}
+  SparseMatrix(int r, int c) : rows(r), cols(c), rowPtr(r + 1, 0),data(NULL), pointers (r,NULL) counter(0){}
   //se tuvo que volver const a get para poder llamarlo desde la multiplicacion
   //ya que la referencia a la matriz b se recibe como const
   int get(int r, int c) const
@@ -24,94 +30,124 @@ public:
     int ending = rowPtr[r+1];
     int result = INF;
     //recorre las columnas de la fila buscando la solicitada
-    for (int i = opening; i < ending; i++) {
-      if (colInd[i] == c) {
+    int i = opening;
+    node *current = pointers[r];
+    while(i < ending) {
+      if (current->colInd == c) {
         //si la encuentra deja de recorrer
-        result = val[i];
+        result = current->val;
         break;
       }
+      //incremento y paso al siguiente
+      i++;
+      current = current->next;
     }
 
     // si recorrio toda la fila y no encontro la columna, result es INF
     // si se escribio algun valor en result, lo retorna
     return result;
   }
+  //set solo funciona en orden y es rapida
+  //se usa al leer la primera matriz del archivo
   void set(int v, int r, int c)
   {
     //redefinicion del set
     //se asume que la fuente esta ordenada
-    val.push_back( v );
-    colInd.push_back( c );
+    node *nuevo = (node *) malloc(sizeof(node));
+    nuevo->val = val;
+    nuevo->colInd = c;
     rowPtr[r+1]=counter+1;
+    pointers[r]= nuevo; 
     counter++;
     return;
   }
-  void mult(const SparseMatrix& b)
+  //put crea e inserta un nuevo elemento
+  void put (int v, int r, int c)
   {
-    // Multiplica esta matriz con la matriz b
-    // se crea la matriz resultado, de filas como la propia matriz t de columnas como la segunda
-    int r = rows;
-    int c = b.cols;
-    for (int i = 0; i < r; i++) {
-      for (int j = 0; j < c; j++) {
-        // aca se comienza, para cada posicion i,j de la matriz resultado
-        // el calculo de la multiplicacion de matrices.
-        int opening = rowPtr[i];
-        int ending = rowPtr[i+1];
-        int value = INF;
-        for (int k = opening; k < ending; k++) {
-          //se recorren las columnas con valores
-          int tc = colInd[k];
-          int v1 = val[k];
-          // aca me estaba equivocando en el orden fila/columna
-          // que para b se debe tomar columna/fila, ya que se recorre al contrario :P
-          int v2 = b.get(tc,j);
-          value = min( value, v1+v2);
-        }
-        if (value != INF) {
-          this->set(value,i,j);
-        }
-        //fin del proceso de multiplicacion
+  //intenta encontrar el elemento
+    int opening = rowPtr[r];
+    int ending = rowPtr[r+1];
+    //recorre las columnas de la fila buscando la solicitada
+    int i = opening;
+    node *current = pointers[r];
+    while(i < ending) {
+      if (current->colInd == c) {
+        //si la encuentra escribe y deja de recorrer
+        current->val = v;
+        break;
       }
+      if (current->colInd > c) {
+        //si lo columna en la que esta es mayor a la que quiere escribir
+        //es porque se paso  y es necesario insertar un nodo antes
+ 	node *nuevo = (node *) malloc(sizeof(node));
+        ans = current->prev;
+        ans->next = nuevo;
+        nuevo->next = current;
+        nuevo->prev = ans;
+        current->prev = nuevo;
+	//si ademas esta en el primero actualiza el puntero
+	if(i == opening)
+	{
+	  pointers[r] = nuevo;
+	}
+        // ahora actualiza todas los demas rowPtr
+	for(j = r+1;j<= rows;j++)
+	{
+	  rowPtr[j] += 1; 
+	}
+        break;
+      }
+      //incremento y paso al siguiente
+      i++;
+      current = current->next;
     }
-    return;
+
   }
-  void mult_row(SparseMatrix& m,int a,Vector& rv,Vector& rc)
+  void mult(SparseMatrix &result)
   {
-    int x1 = rowPtr[a];
-    int y1 = rowPtr[a+1];
-    //se recorren las columnas correspondientes
-    //a las filas que tienen valores
-    //
-    for (int b = 0; b < rows; ++b)
+    // Multiplica esta matriz con si misma escribiendo el resultado en result
+    //cicla sobre el numero de filas llamando a la multiplicacion pequenna
+    for(x = 0; x < rows; x++)
     {
-      //para cada columna
-      int x2 = m.rowPtr[b];
-      int y2 = m.rowPtr[b+1];
-      int r=INF; //valor
-      for (int i = x1; i < y1; ++i)
-      {
-        //se recorre cada elemento de la columna
-        for (int j = x2; colInd[i] >= m.colInd[j] and j < y2; ++j)
-        {
-          //busca si existe un valor en la fila correspondiente
-          if (colInd[i] == m.colInd[j])
-          {
-            //aqui se efectua la multiplicacion
-	    r = min(r,val[i] + m.val[j]);
-            //r += val[i]*val[j];
-          }
-        }
-      }
-      if (r != 0)
-      {
-          //si luego de calcular, hay algun valor
-        rv.push_back(r);
-        rc.push_back(b);
-      }
+      this.row_mult(x,result);
     }
-    return;
   }
+  void row_mult (int row_n, SparseMatrix &result)
+  {
+    //para la fila x de result
+    x = row_n;
+    //y cada columna y de result
+    // se calculara el valor x,y
+    for (y = 0; y < cols; y++)
+    {
+      //solo hace esto si x es diferente de y
+      // si son iguales es valor es 0 y no se escribe
+      if( x != y)
+      {
+        //valor que se va a calcular en esta ronda
+        int value = result.get(x,y);
+        //se recorre la fila x en origen
+        int opening = rowPtr[x];
+        int ending = rowPtr[x+1];
+        int i = opening;
+        node *current = pointers[x];
+        while(i < ending)
+        {
+          cur_col = current->colInd;
+          val_origen = current->val;
+          val_destino = this.get(cur_col,y);
+          //se calcula el nuevo value
+          value = min( value, val_origen + val_destino );
+          //incremento y paso al siguiente
+          i++;
+          current = current->next;
+        }
+        //una vez termina de recorrer la fila origen escribe el valor
+        result.put(value,x,y);
+      }  
+    }
+  }
+
   void print()
   {
     // imprime la matriz dispersa como los 3 vectores
@@ -277,11 +313,9 @@ class thread_pool
     }
 };
 
-void action(int i,SparseMatrix &a,SparseMatrix &m)
+void action(int i,SparseMatrix &origen,SparseMatrix &result)
 {
-  Vector rv;
-  Vector rc;
-  m.mult_row(a,i,rv,rc);
+  origen.mult_row(i,result);
 }
 
 void load(SparseMatrix &a,SparseMatrix &m, string source)
@@ -342,3 +376,4 @@ int main(int argc, char const *argv[])
   m.print();
   return 0;
 }
+ 

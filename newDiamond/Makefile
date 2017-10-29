@@ -6,7 +6,7 @@ all: diamond
 
 diamond: diamond.cc
 	$(CC) $(LIBS) -o diamond diamond.cc
-
+	clear
 
 clean:
 	rm diamond
