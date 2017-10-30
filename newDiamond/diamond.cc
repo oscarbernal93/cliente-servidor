@@ -31,7 +31,8 @@ public:
     int result = INF;
     //recorre las columnas de la fila buscando la solicitada
     int i = opening;
-    node *current = pointers[r];
+    node *current;
+    current  = pointers[r];
     while(i < ending) {
       if (current->colInd == c) {
         //si la encuentra deja de recorrer
@@ -53,17 +54,48 @@ public:
   {
     //redefinicion del set
     //se asume que la fuente esta ordenada
-    node *nuevo = (node *) malloc(sizeof(node));
+    node *nuevo = new node;
+    nuevo->next = NULL;
+    nuevo->prev = NULL;
     nuevo->val = v;
     nuevo->colInd = c;
     rowPtr[r+1]=counter+1;
-    pointers[r]= nuevo; 
+    node *current;
+    node *sig;
+    node *ans;
+    current = pointers[r];
+    if(!current)
+    {
+      pointers[r] = nuevo;
+      if (r > 0)
+      {
+         ans = pointers[r-1];
+         sig = ans->next;
+         while(sig)
+         {
+           ans = sig;
+           sig = ans->next;
+         }
+         ans->next = nuevo;
+         nuevo->prev = ans;
+      }
+    }else{
+      sig = current->next;
+      while(sig)
+      {
+        current = sig;
+        sig = current->next;
+      }
+      current->next = nuevo;
+      nuevo->prev = current;
+    }
     counter++;
     return;
   }
   //put crea e inserta un nuevo elemento
   void put (int v, int r, int c)
   {
+    bool finish = false;
     //intenta encontrar el elemento
     int opening = rowPtr[r];
     int ending = rowPtr[r+1];
@@ -71,15 +103,20 @@ public:
     int i = opening;
     node *current = pointers[r];
     while(i < ending) {
-      if (current->colInd == c) {
+      if (current->colInd == c)
+      {
         //si la encuentra escribe y deja de recorrer
         current->val = v;
+        finish = true;
         break;
       }
-      if (current->colInd > c) {
-        //si lo columna en la que esta es mayor a la que quiere escribir
+      if (current->colInd > c)
+      {
+        //si la columna en la que esta es mayor a la que quiere escribir
         //es porque se paso  y es necesario insertar un nodo antes
- 	node *nuevo = (node *) malloc(sizeof(node));
+ 	node *nuevo = new node;
+        nuevo->val = v;
+        nuevo->colInd = c;
         node *ans = current->prev;
         ans->next = nuevo;
         nuevo->next = current;
@@ -91,18 +128,38 @@ public:
 	  pointers[r] = nuevo;
 	}
         // ahora actualiza todas los demas rowPtr
-	int j;
-	for(j = r+1;j<= rows;j++)
-	{
-	  rowPtr[j] += 1; 
-	}
+        int j;
+        for(j = r+1;j<= rows;j++)
+        {
+          rowPtr[j] += 1;
+        }
+        finish = true;
         break;
       }
       //incremento y paso al siguiente
       i++;
       current = current->next;
+      }
+    if(!finish)
+    {
+      //si llego al final de la fila y no escribio el valor
+      //el nuevo nodo se colocara al final
+      node *nuevo = new node;
+      nuevo->val = v;
+      nuevo->colInd = c;
+      node *ans = current->prev;
+      ans->next = nuevo;
+      nuevo->next = current;
+      nuevo->prev = ans;
+      current->prev = nuevo;
+      finish = true;
+      // ahora actualiza todas los demas rowPtr
+      int j;
+      for(j = r+1;j<= rows;j++)
+      {
+        rowPtr[j] += 1;
+      }
     }
-
   }
   void mult(SparseMatrix &result)
   {
@@ -147,21 +204,40 @@ public:
         }
         //una vez termina de recorrer la fila origen escribe el valor
         result.put(value,x,y);
-      }  
+      }
     }
   }
 
   void print()
   {
-    int x,y;
+    int x,y,val;
     for(x = 0; x < rows; x++)
     {
       for(y = 0; y < cols; y++)
       {
-        cout << "\t" << this->get(x,y);
+        cout << "\t";
+        val = this->get(x,y);
+        if (val == INF) cout << "INF";
+        else cout << val; 
       }
       cout << endl;
     }
+    cout << endl;
+
+    // imprime la matriz dispersa como los 3 vectores
+    //se imprimen las filas
+    cout << "RowPtr = ";
+    for (const auto i: rowPtr)
+      cout << i << '\t';
+    cout << endl;
+    //se imprimen las columnas
+    cout << "ColInd = ";
+    node *current = pointers[0];
+    while( current )
+      {
+        cout << current->colInd << ':' << current->val << '\t';
+	current= current->next;
+      }
     cout << endl;
   }
 };
@@ -346,11 +422,10 @@ int main(int argc, char const *argv[])
   SparseMatrix m(NODES,NODES);
   load(a, m, FILE);
   a.print();
-  
+
   t2 = high_resolution_clock::now();
   cout << "matrix reading: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
   //se comienza el ciclo
- 
   for (int k=1; k <= LIMIT; k++)
   {
     thread_pool p;
@@ -362,8 +437,9 @@ int main(int argc, char const *argv[])
   t1 = high_resolution_clock::now();
   cout << "Con. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
   m.print();
-
-  load(a, m, FILE);
+  SparseMatrix b(NODES,NODES);
+  SparseMatrix n(NODES,NODES);
+  load(b, n, FILE);
   t2 = high_resolution_clock::now();
   for (int k=1; k <= 1; k++)
   {
@@ -371,7 +447,7 @@ int main(int argc, char const *argv[])
   }
   t1 = high_resolution_clock::now();
   cout << "Seq. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
-  m.print();
+  a.print();
   return 0;
 }
  
