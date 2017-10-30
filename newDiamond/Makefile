@@ -4,7 +4,7 @@ LIBS=-lpthread
 
 all: diamond
 
-diamond: diamond.cc
+diamond: diamond.cc diamond.hh
 	$(CC) $(LIBS) -o diamond diamond.cc
 	clear
 

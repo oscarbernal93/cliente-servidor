@@ -180,6 +180,7 @@ public:
     // se calculara el valor x,y
     for (y = 0; y < cols; y++)
     {
+      cerr << y << ", ";
       //solo hace esto si x es diferente de y
       // si son iguales es valor es 0 y no se escribe
       if( x != y)
@@ -218,7 +219,7 @@ public:
         cout << "\t";
         val = this->get(x,y);
         if (val == INF) cout << "INF";
-        else cout << val; 
+        else cout << val;
       }
       cout << endl;
     }
@@ -421,13 +422,14 @@ int main(int argc, char const *argv[])
   SparseMatrix a(NODES,NODES);
   SparseMatrix m(NODES,NODES);
   load(a, m, FILE);
-  a.print();
+  //a.print();
 
   t2 = high_resolution_clock::now();
   cout << "matrix reading: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
-  //se comienza el ciclo
+  /*/se comienza el ciclo
   for (int k=1; k <= LIMIT; k++)
   {
+    cerr << (int) k/LIMIT << "%" << endl;
     thread_pool p;
     for (int i = 0; i < NODES; ++i)
     {
@@ -436,18 +438,15 @@ int main(int argc, char const *argv[])
   }
   t1 = high_resolution_clock::now();
   cout << "Con. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
-  m.print();
-  SparseMatrix b(NODES,NODES);
-  SparseMatrix n(NODES,NODES);
-  load(b, n, FILE);
+  //m.print();*/
   t2 = high_resolution_clock::now();
-  for (int k=1; k <= 1; k++)
+  for (int k=1; k <= LIMIT; k++)
   {
-    m.mult(a);
+    a.mult(m);
   }
   t1 = high_resolution_clock::now();
   cout << "Seq. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
-  a.print();
+  //a.print();
   return 0;
 }
  
