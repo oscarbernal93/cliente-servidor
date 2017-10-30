@@ -22,6 +22,7 @@
 #define NODES 264346
 //define NODES 5
 #define LIMIT 19
+//define LIMIT 4
 
 using namespace std;
 using namespace std::chrono;

@@ -179,7 +179,7 @@ public:
     x = row_n;
     //y cada columna y de result
     // se calculara el valor x,y
-    for (y = 0; y < x; y++)
+    for (y = 0; y < cols; y++)
     {
       //solo hace esto si x es diferente de y
       // si son iguales es valor es 0 y no se escribe
@@ -205,7 +205,6 @@ public:
         }
         //una vez termina de recorrer la fila origen escribe el valor
         result.put(value,x,y);
-        result.put(value,y,x);
       }
     }
   }
@@ -428,27 +427,34 @@ int main(int argc, char const *argv[])
   t2 = high_resolution_clock::now();
   cout << "matrix reading: " << duration_cast<microseconds>(t2 - t1).count() << " microseconds" << endl;
   //se comienza el ciclo
+  cout << "Concurrent: ";
   for (int k=1; k <= LIMIT; k++)
   {
-    cerr << (int) 100*k/LIMIT << "% ";
     thread_pool p;
     for (int i = 0; i < NODES; ++i)
     {
-      p.submit(action,i,ref(a),ref(m));
+      if (k%2 == 0)
+        p.submit(action,i,ref(a),ref(m));
+      else
+        p.submit(action,i,ref(m),ref(a));
     }
+    //cerr << "round " << k << "; ";
   }
-  cout << endl;
   t1 = high_resolution_clock::now();
   cout << "Con. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
   //m.print();
-  /*t2 = high_resolution_clock::now();
-  for (int k=1; k <= LIMIT; k++)
+/*
+  t2 = high_resolution_clock::now();
+  cout << "Sequential: ";
+  for (int k = 0; k <= LIMIT; k++)
   {
     a.mult(m);
+    //cerr << "round " << k << "; ";
   }
   t1 = high_resolution_clock::now();
   cout << "Seq. Diamond Operation " << LIMIT << " times: " << duration_cast<microseconds>(t1 - t2).count() << " microseconds" << endl;
-  //m.print();*/
+  m.print();
+*/
   return 0;
 }
- 
+
